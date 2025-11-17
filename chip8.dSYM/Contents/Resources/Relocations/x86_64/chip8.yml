@@ -1,0 +1,14 @@
+---
+triple:          'x86_64-apple-darwin'
+binary-path:     chip8
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100000DE0, symSize: 0x440 }
+  - { offsetInCU: 0x6DA, offset: 0x6DA, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100000DE0, symSize: 0x440 }
+  - { offsetInCU: 0x846, offset: 0x846, size: 0x8, addend: 0x0, symName: _handle_input, symObjAddr: 0x440, symBinAddr: 0x100001220, symSize: 0x100 }
+  - { offsetInCU: 0x8C2, offset: 0x8C2, size: 0x8, addend: 0x0, symName: _host_to_chip8, symObjAddr: 0x540, symBinAddr: 0x100001320, symSize: 0x224 }
+  - { offsetInCU: 0x26, offset: 0x1A51, size: 0x8, addend: 0x0, symName: _chip8_init, symObjAddr: 0x0, symBinAddr: 0x100001550, symSize: 0x70 }
+  - { offsetInCU: 0x33, offset: 0x1A5E, size: 0x8, addend: 0x0, symName: _chip8_init, symObjAddr: 0x0, symBinAddr: 0x100001550, symSize: 0x70 }
+  - { offsetInCU: 0x54, offset: 0x1A7F, size: 0x8, addend: 0x0, symName: _chip8_init.fontset, symObjAddr: 0x850, symBinAddr: 0x100001F50, symSize: 0x0 }
+  - { offsetInCU: 0xB6, offset: 0x1AE1, size: 0x8, addend: 0x0, symName: _chip8_load_rom, symObjAddr: 0x70, symBinAddr: 0x1000015C0, symSize: 0xA0 }
+  - { offsetInCU: 0x124, offset: 0x1B4F, size: 0x8, addend: 0x0, symName: _chip8_cycle, symObjAddr: 0x110, symBinAddr: 0x100001660, symSize: 0x73F }
+...
