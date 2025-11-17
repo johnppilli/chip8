@@ -1,0 +1,36 @@
+# Compiled binaries
+chip8
+*.exe
+*.out
+*.app
+
+# Debug symbols
+*.dSYM/
+*.dSYM
+
+# Object files
+*.o
+*.obj
+
+# Build artifacts
+*.a
+*.so
+*.dylib
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Compiler output
+*.d
+*.gcda
+*.gcno
+
+# Temporary files
+*.tmp
+*.log
+
