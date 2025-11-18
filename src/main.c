@@ -85,8 +85,9 @@ int main() {
   const Uint32 TIMER_MS = 1000 / 60; // 60 Hz
 
   int running = 1;
+  uint16_t last_pc = 0;
+  int same_pc_count = 0;
   while (running) {
-    printf("Running\n");
     handle_input(&chip, &running);
     // chip8_cycle(&chip); //emulate one cycle
     // chip8_cycle(&chip); //emulate one cycle
@@ -127,8 +128,30 @@ int main() {
     // --- RENDER: draw the 64x32 CHIP-8 framebuffer ---
     if (chip.draw_flag) { // optional: only redraw when gfx changed
 
-      printf("Running\n");
-      printf("%d\n", chip.draw_flag);
+      // Debug: check if PC is stuck
+      if (chip.pc == last_pc) {
+        same_pc_count++;
+        if (same_pc_count > 100) {
+          printf("WARNING: PC stuck at 0x%03X (likely waiting for input via "
+                 "FX0A)\n",
+                 chip.pc);
+          same_pc_count = 0;
+        }
+      } else {
+        if (same_pc_count > 0) {
+          printf("PC was stuck, now advancing from 0x%03X to 0x%03X\n", last_pc,
+                 chip.pc);
+        }
+        same_pc_count = 0;
+        last_pc = chip.pc;
+      }
+
+      // Print PC every 100 frames to see if it's looping
+      static int frame_count = 0;
+      frame_count++;
+      if (frame_count % 100 == 0) {
+        printf("PC: 0x%03X\n", chip.pc);
+      }
 
       SDL_SetRenderDrawColor(r, 0, 0, 0, 255);
       SDL_RenderClear(r);

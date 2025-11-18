@@ -1,5 +1,6 @@
 #include "core.h"
 #include <stdio.h>  // for printf (debugging)
+#include <stdlib.h> // for rand()
 #include <string.h> // for memset
 
 void chip8_init(Chip8 *c) {
@@ -68,7 +69,6 @@ void chip8_cycle(
 
   // 1) Fetch opcode: read two bytes at c --> pc and advance pc by 2
   c->opcode = (c->memory[c->pc] << 8) | c->memory[c->pc + 1];
-  printf("PC: 0x%03X, Opcode: 0x%04X\n", c->pc, c->opcode);
   c->pc += 2;
 
   // Think of this as grabbing two bytes from memory, sticking them together
@@ -118,7 +118,9 @@ void chip8_cycle(
       break;
 
     default:
-      printf("Unknown 0x00** opcode: 0x%04X at PC = 0x%3X\n", op, c->pc);
+      // Some CHIP-8 variants use 0x00CN (scroll down N lines) and other opcodes
+      // For now, just skip unknown 0x00** opcodes
+      // printf("Unknown 0x00** opcode: 0x%04X at PC = 0x%3X\n", op, c->pc);
       break;
     }
     break;
@@ -151,8 +153,12 @@ void chip8_cycle(
     break;
 
   case 0x5000: // 5XY0: Skip next instruction if Vx == Vy
-    if (c->V[x] == c->V[y])
-      c->pc += 2;
+    if ((op & 0x000F) == 0) {
+      if (c->V[x] == c->V[y])
+        c->pc += 2;
+    } else {
+      printf("Unknown 5XY*: 0x%04X at PC = 0x%03X\n", op, c->pc);
+    }
     break;
 
   case 0x7000: // 7XKK: Add KK to Vx
@@ -174,6 +180,10 @@ void chip8_cycle(
 
     case 0x0002: // 8XY2: Vx = Vx & Vy
       c->V[x] &= c->V[y];
+      break;
+
+    case 0x0003: // 8XY3: Vx = Vx ^ Vy
+      c->V[x] ^= c->V[y];
       break;
 
     case 0x0004: {
@@ -209,8 +219,20 @@ void chip8_cycle(
   } break;
 
   case 0x9000: // 9XY0: Skip next instruction if Vx != Vy
-    if (c->V[x] != c->V[y])
-      c->pc += 2;
+    if ((op & 0x000F) == 0) {
+      if (c->V[x] != c->V[y])
+        c->pc += 2;
+    } else {
+      printf("Unknown 9XY*: 0x%04X at PC = 0x%03X\n", op, c->pc);
+    }
+    break;
+
+  case 0xB000: // BNNN: Jump to V0 + NNN
+    c->pc = nnn + c->V[0];
+    break;
+
+  case 0xC000: // CXKK: Vx = random & KK
+    c->V[x] = (rand() % 256) & kk;
     break;
 
   case 0xA000: // ANNN: Set I = NNN
@@ -350,6 +372,20 @@ void chip8_cycle(
       c->memory[c->I + 2] = v % 10;        // ones place
       c->pc += 2;
     } break;
+
+    case 0x0055: // FX55: Store V0-Vx to memory starting at I
+      for (uint8_t i = 0; i <= x; i++) {
+        c->memory[c->I + i] = c->V[i];
+      }
+      c->I += x + 1; // Some CHIP-8 implementations do this
+      break;
+
+    case 0x0065: // FX65: Load V0-Vx from memory starting at I
+      for (uint8_t i = 0; i <= x; i++) {
+        c->V[i] = c->memory[c->I + i];
+      }
+      c->I += x + 1; // Some CHIP-8 implementations do this
+      break;
 
     default:
       printf("Unknown FX**: 0x%04X at PC = 0x%03X\n", op, c->pc);
