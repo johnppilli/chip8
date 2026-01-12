@@ -75,10 +75,10 @@ int main() {
   // load a rom here once, e.g., load a .ch8 into memory at 0x200
   if (!chip8_load_rom(&chip, "roms/PONG.ch8")) {
     SDL_Log("Failed to load ROM: roms/PONG.ch8");
-    printf("Trying to load a different ROM...\n");
     SDL_DestroyRenderer(r);
     SDL_DestroyWindow(win);
     SDL_Quit();
+    return 1;
   }
   printf("ROM loaded: PONG.ch8\n");
 

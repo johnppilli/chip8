@@ -113,6 +113,10 @@ void chip8_cycle(
       break;
 
     case 0x00EE: // 00EE: Return from subroutine
+      if (c->sp == 0) {
+        printf("Stack underflow at PC = 0x%03X\n", c->pc - 2);
+        return;
+      }
       c->sp--;
       c->pc = c->stack[c->sp];
       break;
@@ -130,6 +134,10 @@ void chip8_cycle(
     break;
 
   case 0x2000: // 2NNN: Call subroutine at adresss NNN
+    if (c->sp >= 16) {
+      printf("Stack overflow at PC = 0x%03X\n", c->pc - 2);
+      return;
+    }
     c->stack[c->sp] =
         c->pc; // store current pc on stack, after the assignment (=) is what we
                // want to store, and before it is where we want to store it
@@ -337,6 +345,9 @@ void chip8_cycle(
         }
 
       if (pressed < 0) {
+        // No key pressed - decrement PC to re-execute this instruction
+        // (PC was already incremented at the start of chip8_cycle)
+        c->pc -= 2;
         return;
       }
 
@@ -366,14 +377,22 @@ void chip8_cycle(
       break;
 
     case 0x0033: {
+      if (c->I + 2 >= 4096) {
+        printf("I register out of bounds (0x%03X) at PC = 0x%03X\n", c->I, c->pc - 2);
+        return;
+      }
       uint8_t v = c->V[x];
       c->memory[c->I] = v / 100;           // hundreds place
       c->memory[c->I + 1] = (v / 10) % 10; // tens place
       c->memory[c->I + 2] = v % 10;        // ones place
-      c->pc += 2;
+      // Note: PC is already incremented at the start of chip8_cycle()
     } break;
 
     case 0x0055: // FX55: Store V0-Vx to memory starting at I
+      if (c->I + x >= 4096) {
+        printf("I register out of bounds (0x%03X) at PC = 0x%03X\n", c->I, c->pc - 2);
+        return;
+      }
       for (uint8_t i = 0; i <= x; i++) {
         c->memory[c->I + i] = c->V[i];
       }
@@ -381,6 +400,10 @@ void chip8_cycle(
       break;
 
     case 0x0065: // FX65: Load V0-Vx from memory starting at I
+      if (c->I + x >= 4096) {
+        printf("I register out of bounds (0x%03X) at PC = 0x%03X\n", c->I, c->pc - 2);
+        return;
+      }
       for (uint8_t i = 0; i <= x; i++) {
         c->V[i] = c->memory[c->I + i];
       }
