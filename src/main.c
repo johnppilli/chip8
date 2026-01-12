@@ -75,6 +75,7 @@ int main() {
   // load a rom here once, e.g., load a .ch8 into memory at 0x200
   if (!chip8_load_rom(&chip, "roms/PONG.ch8")) {
     SDL_Log("Failed to load ROM: roms/PONG.ch8");
+    printf("Trying to load a different ROM...\n");
     SDL_DestroyRenderer(r);
     SDL_DestroyWindow(win);
     SDL_Quit();
@@ -87,8 +88,11 @@ int main() {
   int running = 1;
   uint16_t last_pc = 0;
   int same_pc_count = 0;
+  int cycle_count = 0;
+  printf("Starting emulator loop...\n");
   while (running) {
     handle_input(&chip, &running);
+    cycle_count++;
     // chip8_cycle(&chip); //emulate one cycle
     // chip8_cycle(&chip); //emulate one cycle
     // chip8_cycle(&chip); //emulate one cycle
@@ -127,31 +131,7 @@ int main() {
 
     // --- RENDER: draw the 64x32 CHIP-8 framebuffer ---
     if (chip.draw_flag) { // optional: only redraw when gfx changed
-
-      // Debug: check if PC is stuck
-      if (chip.pc == last_pc) {
-        same_pc_count++;
-        if (same_pc_count > 100) {
-          printf("WARNING: PC stuck at 0x%03X (likely waiting for input via "
-                 "FX0A)\n",
-                 chip.pc);
-          same_pc_count = 0;
-        }
-      } else {
-        if (same_pc_count > 0) {
-          printf("PC was stuck, now advancing from 0x%03X to 0x%03X\n", last_pc,
-                 chip.pc);
-        }
-        same_pc_count = 0;
-        last_pc = chip.pc;
-      }
-
-      // Print PC every 100 frames to see if it's looping
-      static int frame_count = 0;
-      frame_count++;
-      if (frame_count % 100 == 0) {
-        printf("PC: 0x%03X\n", chip.pc);
-      }
+      printf("Drawing! PC: 0x%03X, Cycles: %d\n", chip.pc, cycle_count);
 
       SDL_SetRenderDrawColor(r, 0, 0, 0, 255);
       SDL_RenderClear(r);
@@ -170,6 +150,13 @@ int main() {
       SDL_RenderPresent(r);
       chip.draw_flag = false;
     }
+
+    // Debug: print every 1000 cycles to show we're running
+    if (cycle_count % 1000 == 0) {
+      printf("Running... Cycles: %d, PC: 0x%03X, draw_flag: %d\n", cycle_count,
+             chip.pc, chip.draw_flag);
+    }
+
     SDL_Delay(16);
   }
   SDL_DestroyRenderer(r);

@@ -388,13 +388,15 @@ void chip8_cycle(
       break;
 
     default:
-      printf("Unknown FX**: 0x%04X at PC = 0x%03X\n", op, c->pc);
+      // Unknown FX** opcode - treat as no-op to allow ROM to continue
+      // printf("Unknown FX**: 0x%04X at PC = 0x%03X\n", op, c->pc);
       break;
     }
   } break;
 
   default:
-    printf("Unknown opcode: 0x%04X at PC = 0x%03X\n", op, c->pc);
+    // Unknown opcode - treat as no-op to allow ROM to continue
+    // printf("Unknown opcode: 0x%04X at PC = 0x%03X\n", op, c->pc);
     break;
   }
 }
