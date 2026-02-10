@@ -58,7 +58,13 @@ static void handle_input(Chip8 *c, int *running) {
   }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+  if (argc < 2) {
+    fprintf(stderr, "Usage: chip8 <rom>\nExample: chip8 roms/TETRIS.ch8\n");
+    return 1;
+  }
+  const char *rom_path = argv[1];
+
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO);
   const int W = 64, H = 32, SCALE = 12;
 
@@ -69,8 +75,8 @@ int main() {
 
   Chip8 chip;
   chip8_init(&chip);
-  if (!chip8_load_rom(&chip, "roms/PONG.ch8")) {
-    SDL_Log("Failed to load ROM: roms/PONG.ch8");
+  if (!chip8_load_rom(&chip, rom_path)) {
+    SDL_Log("Failed to load ROM: %s", rom_path);
     SDL_DestroyRenderer(r);
     SDL_DestroyWindow(win);
     SDL_Quit();
