@@ -114,5 +114,25 @@ void platform_draw(const uint8_t *gfx) {
     SDL_RenderPresent(ren);
 }
 
+void platform_beep(bool on) {
+    if(!audio_dev) return; 
+
+    if (on && !beeping) {
+        beeping = true; 
+        SDL_ClearQueuedAudio(audio_dev);
+        SDL_PauseAudioDevice(audio_dev, 0);
+    }
+    if (on) {
+        SDL_QueueAudio(audio_dev, beep_buf, sizeof(beep_buf));
+    }
+    if (!on && beeping) {
+        beeping = false;
+        SDL_PauseAudioDevice(audio_dev, 1);
+        SDL_ClearQueuedAudio(audio_dev);
+    }
+}
+
+
+
 
 
