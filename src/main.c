@@ -83,7 +83,6 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // Set up audio: simple square wave beep for the sound timer
   SDL_AudioDeviceID audio_dev = 0;
   {
     SDL_AudioSpec want = {0};
@@ -91,21 +90,19 @@ int main(int argc, char *argv[]) {
     want.format = AUDIO_S16SYS;
     want.channels = 1;
     want.samples = 512;
-    want.callback = NULL; // use SDL_QueueAudio
+    want.callback = NULL;
     audio_dev = SDL_OpenAudioDevice(NULL, 0, &want, NULL, 0);
-
-    // Pre-fill a 1-second square wave buffer to queue in chunks
     if (audio_dev) {
-      SDL_PauseAudioDevice(audio_dev, 1); // start paused
+      SDL_PauseAudioDevice(audio_dev, 1);
     }
   }
   int beeping = 0;
 
-  // Pre-generate one frame (~735 samples at 44100/60) of square wave
+  // one frame of 440 Hz square wave
   const int BEEP_SAMPLES = 44100 / 60;
   int16_t beep_buf[BEEP_SAMPLES];
   {
-    const int HALF_PERIOD = 44100 / 440 / 2; // ~440 Hz square wave
+    const int HALF_PERIOD = 44100 / 440 / 2;
     for (int i = 0; i < BEEP_SAMPLES; i++) {
       beep_buf[i] = ((i / HALF_PERIOD) % 2) ? 3000 : -3000;
     }
@@ -122,7 +119,7 @@ int main(int argc, char *argv[]) {
       chip8_cycle(&chip);
     }
 
-    // Decrement timers at 60 Hz
+    // timers tick at 60 Hz
     Uint32 now = SDL_GetTicks();
     if (now - last_timer_tick >= TIMER_MS) {
       if (chip.delay_timer > 0)
@@ -130,7 +127,6 @@ int main(int argc, char *argv[]) {
       if (chip.sound_timer > 0)
         --chip.sound_timer;
 
-      // Toggle beep based on sound timer
       if (audio_dev) {
         if (chip.sound_timer > 0 && !beeping) {
           beeping = 1;
@@ -150,7 +146,6 @@ int main(int argc, char *argv[]) {
       last_timer_tick = now;
     }
 
-    // Render framebuffer
     if (chip.draw_flag) {
       SDL_SetRenderDrawColor(r, 0, 0, 0, 255);
       SDL_RenderClear(r);

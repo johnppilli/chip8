@@ -42,28 +42,25 @@ bool chip8_load_rom(Chip8 *c, const char *path) {
 }
 
 void chip8_cycle(Chip8 *c) {
-  // Fetch
   uint16_t op = (c->memory[c->pc] << 8) | c->memory[c->pc + 1];
   c->opcode = op;
   c->pc += 2;
 
-  // Decode
   uint16_t nnn = op & 0x0FFF;
   uint8_t kk = op & 0x00FF;
   uint8_t n = op & 0x000F;
   uint8_t x = (op >> 8) & 0x0F;
   uint8_t y = (op >> 4) & 0x0F;
 
-  // Execute
   switch (op & 0xF000) {
   case 0x0000:
     switch (op) {
-    case 0x00E0:  // CLS - Clear display
+    case 0x00E0:  // CLS
       memset(c->gfx, 0, sizeof(c->gfx));
       c->draw_flag = true;
       break;
 
-    case 0x00EE:  // RET - Return from subroutine
+    case 0x00EE:  // RET
       if (c->sp == 0) {
         fprintf(stderr, "Stack underflow at PC=0x%03X\n", c->pc - 2);
         return;
@@ -76,11 +73,11 @@ void chip8_cycle(Chip8 *c) {
     }
     break;
 
-  case 0x1000:  // JP addr - Jump to nnn
+  case 0x1000:  // JP addr
     c->pc = nnn;
     break;
 
-  case 0x2000:  // CALL addr - Call subroutine at nnn
+  case 0x2000:  // CALL addr
     if (c->sp >= 16) {
       fprintf(stderr, "Stack overflow at PC=0x%03X\n", c->pc - 2);
       return;
@@ -89,26 +86,26 @@ void chip8_cycle(Chip8 *c) {
     c->pc = nnn;
     break;
 
-  case 0x3000:  // SE Vx, byte - Skip if Vx == kk
+  case 0x3000:  // SE Vx, byte
     if (c->V[x] == kk)
       c->pc += 2;
     break;
 
-  case 0x4000:  // SNE Vx, byte - Skip if Vx != kk
+  case 0x4000:  // SNE Vx, byte
     if (c->V[x] != kk)
       c->pc += 2;
     break;
 
-  case 0x5000:  // SE Vx, Vy - Skip if Vx == Vy
+  case 0x5000:  // SE Vx, Vy
     if ((op & 0x000F) == 0 && c->V[x] == c->V[y])
       c->pc += 2;
     break;
 
-  case 0x6000:  // LD Vx, byte - Set Vx = kk
+  case 0x6000:  // LD Vx, byte
     c->V[x] = kk;
     break;
 
-  case 0x7000:  // ADD Vx, byte - Set Vx = Vx + kk
+  case 0x7000:  // ADD Vx, byte
     c->V[x] += kk;
     break;
 
@@ -151,24 +148,24 @@ void chip8_cycle(Chip8 *c) {
     }
     break;
 
-  case 0x9000:  // SNE Vx, Vy - Skip if Vx != Vy
+  case 0x9000:  // SNE Vx, Vy
     if ((op & 0x000F) == 0 && c->V[x] != c->V[y])
       c->pc += 2;
     break;
 
-  case 0xA000:  // LD I, addr - Set I = nnn
+  case 0xA000:  // LD I, addr
     c->I = nnn;
     break;
 
-  case 0xB000:  // JP V0, addr - Jump to V0 + nnn
+  case 0xB000:  // JP V0, addr
     c->pc = c->V[0] + nnn;
     break;
 
-  case 0xC000:  // RND Vx, byte - Set Vx = random & kk
+  case 0xC000:  // RND Vx, byte
     c->V[x] = (rand() % 256) & kk;
     break;
 
-  case 0xD000: {  // DRW Vx, Vy, n - Draw sprite
+  case 0xD000: {  // DRW Vx, Vy, n
     uint8_t vx = c->V[x] % 64;
     uint8_t vy = c->V[y] % 32;
     c->V[0xF] = 0;
@@ -194,11 +191,11 @@ void chip8_cycle(Chip8 *c) {
   case 0xE000: {
     uint8_t key = c->V[x] & 0x0F;
     switch (op & 0x00FF) {
-    case 0x9E:  // SKP Vx - Skip if key pressed
+    case 0x9E:  // SKP Vx
       if (c->key[key])
         c->pc += 2;
       break;
-    case 0xA1:  // SKNP Vx - Skip if key not pressed
+    case 0xA1:  // SKNP Vx
       if (!c->key[key])
         c->pc += 2;
       break;
@@ -212,7 +209,7 @@ void chip8_cycle(Chip8 *c) {
       c->V[x] = c->delay_timer;
       break;
 
-    case 0x0A: {  // LD Vx, K - Wait for key press
+    case 0x0A: {  // LD Vx, K
       int pressed = -1;
       for (int k = 0; k < 16; k++) {
         if (c->key[k]) {
@@ -240,11 +237,11 @@ void chip8_cycle(Chip8 *c) {
       c->I += c->V[x];
       break;
 
-    case 0x29:  // LD F, Vx - Set I to font sprite location
+    case 0x29:  // LD F, Vx
       c->I = CHIP8_FONT_ADDR + (c->V[x] & 0x0F) * 5;
       break;
 
-    case 0x33:  // LD B, Vx - Store BCD of Vx
+    case 0x33:  // LD B, Vx
       if (c->I + 2 >= CHIP8_MEM_SIZE) {
         fprintf(stderr, "I out of bounds (0x%03X) at PC=0x%03X\n", c->I, c->pc - 2);
         return;
@@ -254,7 +251,7 @@ void chip8_cycle(Chip8 *c) {
       c->memory[c->I + 2] = c->V[x] % 10;
       break;
 
-    case 0x55:  // LD [I], Vx - Store V0-Vx to memory
+    case 0x55:  // LD [I], Vx
       if (c->I + x >= CHIP8_MEM_SIZE) {
         fprintf(stderr, "I out of bounds (0x%03X) at PC=0x%03X\n", c->I, c->pc - 2);
         return;
@@ -264,7 +261,7 @@ void chip8_cycle(Chip8 *c) {
       c->I += x + 1;
       break;
 
-    case 0x65:  // LD Vx, [I] - Load V0-Vx from memory
+    case 0x65:  // LD Vx, [I]
       if (c->I + x >= CHIP8_MEM_SIZE) {
         fprintf(stderr, "I out of bounds (0x%03X) at PC=0x%03X\n", c->I, c->pc - 2);
         return;
